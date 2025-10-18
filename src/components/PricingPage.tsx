@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Check, Crown, Users } from 'lucide-react';
+import { Check, Crown, Users, X } from 'lucide-react';
 import gcashIcon from "../assets/gcash.png";
+import { supabase } from '../supabaseClient';
 
 type Page = 'home' | 'tutorials' | 'pricing' | 'auth' | 'admin';
 
@@ -18,6 +20,13 @@ interface PricingPageProps {
 }
 
 export function PricingPage({ user, onNavigate }: PricingPageProps) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [gcashNumber, setGcashNumber] = useState('');
+  const [errors, setErrors] = useState<{ gcash?: string }>({});
+  const [processing, setProcessing] = useState(false);
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+
   const plans = [
     {
       name: 'Free',
@@ -36,9 +45,9 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
         'No premium content',
         'Limited device configurations'
       ],
-      buttonText: user?.subscription === 'free' ? 'Current Plan' : 'Get Started',
+      buttonText: user?.subscription === 'free' ? 'Current Plan' : 'Downgrade',
       isPopular: false,
-      disabled: user?.subscription === 'free'
+      disabled: true // Always disabled - can't switch to free or stay on free
     },
     {
       name: 'Premium',
@@ -64,15 +73,75 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
     }
   ];
 
-  const handleSubscribe = (planName: string) => {
+  const openPaymentModal = (planName: string) => {
     if (!user) {
       onNavigate('auth');
       return;
     }
 
-    if (planName === 'Premium' && user.subscription !== 'premium') {
-      // In a real app, this would integrate with a payment processor
-      alert('Payment integration would be implemented here. For demo purposes, your subscription has been upgraded!');
+    if (planName === 'Free' && user.subscription === 'free') return;
+    if (planName === 'Premium' && user.subscription === 'premium') return;
+
+    setSelectedPlan(planName);
+    setGcashNumber('');
+    setErrors({});
+    setResultMessage(null);
+    setShowModal(true);
+  };
+
+  const validateGcash = (num: string) => {
+    const local = /^09\d{9}$/;
+    const intl = /^\+639\d{9}$/;
+    if (!num) return 'GCash number is required';
+    if (!local.test(num) && !intl.test(num)) return 'Enter a valid GCash number (e.g. 09XXXXXXXXX or +639XXXXXXXXX)';
+    return null;
+  };
+
+  const handleDemoPayment = async () => {
+    setErrors({});
+    setResultMessage(null);
+
+    const err = validateGcash(gcashNumber.trim());
+    if (err) {
+      setErrors({ gcash: err });
+      return;
+    }
+
+    if (!user) {
+      onNavigate('auth');
+      return;
+    }
+
+    setProcessing(true);
+    setResultMessage(null);
+
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Update Supabase profile to premium
+    try {
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ subscription: 'premium' })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProcessing(false);
+      setResultMessage('Payment successful! Your account has been upgraded to Premium.');
+
+      // Close modal and redirect to home
+      setTimeout(() => {
+        setShowModal(false);
+        setResultMessage(null);
+        setSelectedPlan(null);
+        onNavigate('home'); // Navigate to home, app will refresh user data
+        window.location.reload(); // Refresh to update user state from database
+      }, 1500);
+
+    } catch (dbErr: any) {
+      setProcessing(false);
+      setResultMessage(`Payment succeeded but updating subscription failed: ${dbErr.message || dbErr}`);
     }
   };
 
@@ -97,8 +166,7 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
             {plans.map((plan, index) => (
               <Card
                 key={index}
-                className={`relative ${plan.isPopular ? 'border-primary shadow-lg scale-105' : ''
-                  }`}
+                className={`relative ${plan.isPopular ? 'border-primary shadow-lg scale-105' : ''}`}
               >
                 {plan.isPopular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -122,7 +190,6 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
 
                 <CardContent>
                   <div className="space-y-6">
-                    {/* Features */}
                     <div>
                       <h4 className="font-medium mb-3">What's Included:</h4>
                       <ul className="space-y-2">
@@ -135,7 +202,6 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
                       </ul>
                     </div>
 
-                    {/* Limitations (for free plan) */}
                     {plan.limitations.length > 0 && (
                       <div>
                         <h4 className="font-medium mb-3 text-muted-foreground">Limitations:</h4>
@@ -155,7 +221,7 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
                       size="lg"
                       variant={plan.isPopular ? "default" : "outline"}
                       disabled={plan.disabled}
-                      onClick={() => handleSubscribe(plan.name)}
+                      onClick={() => openPaymentModal(plan.name)}
                     >
                       {plan.buttonText}
                     </Button>
@@ -199,7 +265,6 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
           </div>
         </div>
       </section>
-
 
       {/* FAQ */}
       <section className="py-16 px-4">
@@ -261,6 +326,92 @@ export function PricingPage({ user, onNavigate }: PricingPageProps) {
           </div>
         </div>
       </section>
+
+      {/* Demo Payment Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              if (!processing) {
+                setShowModal(false);
+                setResultMessage(null);
+              }
+            }}
+          />
+          <div className="relative w-full max-w-md mx-4 bg-background rounded-lg shadow-lg overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div className="flex items-center space-x-3">
+                <img src={gcashIcon} alt="GCash" className="h-6 w-6 object-contain" />
+                <div>
+                  <div className="font-medium">GCash Demo Payment</div>
+                  <div className="text-xs text-muted-foreground">Plan: {selectedPlan}</div>
+                </div>
+              </div>
+              <button
+                className="p-2 rounded hover:bg-muted/40"
+                onClick={() => {
+                  if (!processing) {
+                    setShowModal(false);
+                    setResultMessage(null);
+                  }
+                }}
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5">
+              <p className="text-sm text-muted-foreground mb-4">
+                This is a demo payment flow. No real payment will be processed. Enter your GCash number to continue.
+              </p>
+
+              <label className="block text-sm mb-2">GCash Number</label>
+              <input
+                value={gcashNumber}
+                onChange={(e) => setGcashNumber(e.target.value)}
+                placeholder="09XXXXXXXXX or +639XXXXXXXXX"
+                className="w-full px-3 py-2 rounded border bg-white/5 text-sm"
+                disabled={processing}
+              />
+              {errors.gcash && <p className="text-xs text-red-600 mt-2">{errors.gcash}</p>}
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Demo price: <strong>₱299</strong>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      if (!processing) {
+                        setShowModal(false);
+                        setResultMessage(null);
+                      }
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleDemoPayment} disabled={processing}>
+                    {processing ? 'Processing...' : 'Pay (Demo)'}
+                  </Button>
+                </div>
+              </div>
+
+              {resultMessage && (
+                <div className="mt-4 p-3 rounded bg-muted/40 text-sm">
+                  {resultMessage}
+                </div>
+              )}
+
+              <div className="mt-3 text-xs text-muted-foreground">
+                <strong>Note:</strong> This is a simulation for demo purposes only — no real transaction will occur and subscriptions are updated in the database for demo.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

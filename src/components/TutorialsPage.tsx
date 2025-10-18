@@ -10,11 +10,11 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 type Page = 'home' | 'tutorials' | 'pricing' | 'auth' | 'admin';
 
 interface TutorialsPageProps {
-  user: { 
-    id: string; 
-    name: string; 
-    email: string; 
-    subscription: 'free' | 'premium'; 
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    subscription: 'free' | 'premium';
     isAdmin?: boolean;
   } | null;
   onNavigate: (page: Page) => void;
@@ -101,8 +101,8 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
     { id: 'advanced', label: 'Advanced', icon: Settings }
   ];
 
-  const filteredTutorials = selectedCategory === 'all' 
-    ? tutorials 
+  const filteredTutorials = selectedCategory === 'all'
+    ? tutorials
     : tutorials.filter(tutorial => tutorial.category === selectedCategory);
 
   const canAccessTutorial = (tutorial: Tutorial) => {
@@ -129,14 +129,14 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setSelectedTutorial(null)}
             className="mb-6"
           >
             ← Back to Tutorials
           </Button>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
@@ -147,12 +147,12 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                   className="w-full h-full object-cover"
                 />
               </div>
-              
+
               <h1 className="mb-4 text-3xl">{selectedTutorial.title}</h1>
               <p className="mb-6 text-lg text-muted-foreground">
                 {selectedTutorial.description}
               </p>
-              
+
               <div className="prose prose-lg max-w-none">
                 <h3>What You'll Learn</h3>
                 <ul>
@@ -161,10 +161,10 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                   <li>Security implementation strategies</li>
                   <li>Troubleshooting common issues</li>
                 </ul>
-                
+
                 <h3>Tutorial Content</h3>
                 <p>This comprehensive tutorial covers all aspects of network configuration...</p>
-                
+
                 <div className="not-prose">
                   <Button className="w-full mt-6" size="lg">
                     <Play className="mr-2 h-4 w-4" />
@@ -173,7 +173,7 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                 </div>
               </div>
             </div>
-            
+
             {/* Sidebar */}
             <div className="space-y-6">
               <Card>
@@ -193,7 +193,7 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Devices Used</CardTitle>
@@ -241,19 +241,21 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                       </Button>
                     ))}
                   </div>
-                  
+
                   <Separator className="my-4" />
-                  
+
                   <div className="space-y-4">
                     <h4>Subscription Status</h4>
                     {user ? (
                       <div className="space-y-2">
                         <div className="text-sm text-muted-foreground">
-                          Current Plan: <span className="font-medium">{user.subscription}</span>
+                          Current Plan: <span className="font-medium">
+                            {user.subscription.charAt(0).toUpperCase() + user.subscription.slice(1)}
+                          </span>
                         </div>
                         {user.subscription === 'free' && (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="w-full"
                             onClick={() => onNavigate('pricing')}
                           >
@@ -266,8 +268,8 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                         <p className="text-sm text-muted-foreground">
                           Sign in to access premium tutorials
                         </p>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="w-full"
                           onClick={() => onNavigate('auth')}
                         >
@@ -280,29 +282,28 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
               </CardContent>
             </Card>
           </div>
-          
+
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="mb-8">
               <h1 className="mb-4 text-3xl">
-                {selectedCategory === 'all' ? 'All Tutorials' : 
-                 categories.find(c => c.id === selectedCategory)?.label}
+                {selectedCategory === 'all' ? 'All Tutorials' :
+                  categories.find(c => c.id === selectedCategory)?.label}
               </h1>
               <p className="text-muted-foreground">
                 Choose from our comprehensive collection of networking tutorials
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredTutorials.map((tutorial) => {
                 const hasAccess = canAccessTutorial(tutorial);
-                
+
                 return (
-                  <Card 
-                    key={tutorial.id} 
-                    className={`group cursor-pointer transition-all hover:shadow-lg ${
-                      !hasAccess ? 'opacity-75' : ''
-                    }`}
+                  <Card
+                    key={tutorial.id}
+                    className={`group cursor-pointer transition-all hover:shadow-lg ${!hasAccess ? 'opacity-75' : ''
+                      }`}
                     onClick={() => handleTutorialClick(tutorial)}
                   >
                     <CardHeader>
@@ -327,17 +328,17 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex items-start justify-between">
                         <CardTitle className="line-clamp-2">{tutorial.title}</CardTitle>
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent>
                       <CardDescription className="mb-4 line-clamp-3">
                         {tutorial.description}
                       </CardDescription>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <span className="flex items-center">
@@ -348,10 +349,10 @@ export function TutorialsPage({ user, onNavigate }: TutorialsPageProps) {
                             {tutorial.difficulty}
                           </Badge>
                         </div>
-                        
+
                         {!hasAccess && (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();

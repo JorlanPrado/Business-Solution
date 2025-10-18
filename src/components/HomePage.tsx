@@ -7,6 +7,7 @@ type Page = 'home' | 'tutorials' | 'pricing' | 'auth' | 'admin';
 
 interface HomePageProps {
   onNavigate: (page: Page) => void;
+  subscription: 'free' | 'premium' | null;
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
@@ -102,9 +103,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
             Join thousands of students who have mastered network infrastructure and security with our platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => onNavigate('auth')}>
+            {/* <Button size="lg" onClick={() => onNavigate('auth')}>
               Get Started Free
-            </Button>
+            </Button> */}
             <Button variant="outline" size="lg" onClick={() => onNavigate('tutorials')}>
               Browse Tutorials
             </Button>

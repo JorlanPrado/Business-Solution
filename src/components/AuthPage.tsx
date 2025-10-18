@@ -12,10 +12,11 @@ type Page = 'home' | 'tutorials' | 'pricing' | 'auth' | 'admin';
 interface AuthPageProps {
   onLogin: (userData: { 
     id: string; 
-    name: string; 
+    name?: string | null; 
     email: string; 
     subscription: 'free' | 'premium'; 
     isAdmin?: boolean;
+    role?: string;
   }) => void;
   onNavigate: (page: Page) => void;
 }
@@ -39,6 +40,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (!isLogin) {
+      // You previously chose signup with Email+Password only, but this keeps the optional name field if UI shows it
       if (!formData.name) newErrors.name = 'Name is required';
       if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
       else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
@@ -68,6 +70,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
         if (error) throw error;
         if (!data.user) throw new Error('Login failed');
 
+        // fetch profile from profiles table
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -76,13 +79,18 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
 
         if (profileError) throw profileError;
 
+        // Call parent with profile info (subscription, role, isAdmin)
         onLogin({
           id: data.user.id,
-          name: profile.name,
+          name: profile.name ?? null,
           email: data.user.email ?? '',
-          subscription: profile.subscription,
-          isAdmin: profile.isAdmin
+          subscription: profile.subscription ?? 'free',
+          isAdmin: profile.isAdmin ?? false,
+          role: profile.role ?? 'user'
         });
+
+        // navigate to home after login
+        onNavigate('home');
 
       } else {
         // --- SIGNUP ---
@@ -97,24 +105,32 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
         // Insert profile after signup (RLS-friendly)
         const { error: profileError } = await supabase.from('profiles').insert([{
           id: data.user.id,
-          name: formData.name,
+          name: formData.name || null,
+          email: formData.email,
           subscription: 'free',
-          isAdmin: false
+          role: 'user',       // add role
+          isAdmin: false      // keep isAdmin
         }]);
 
         if (profileError) throw profileError;
 
+        // Notify parent and navigate home
         onLogin({
           id: data.user.id,
-          name: formData.name,
-          email: data.user.email ?? '',
+          name: formData.name || null,
+          email: data.user.email ?? formData.email,
           subscription: 'free',
-          isAdmin: false
+          isAdmin: false,
+          role: 'user'
         });
+
+        onNavigate('home');
       }
 
     } catch (err: any) {
-      alert(err.message || 'Something went wrong');
+      // Prefer showing friendly messages
+      const message = err?.message || 'Something went wrong';
+      alert(message);
     } finally {
       setLoading(false);
     }
@@ -147,7 +163,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
                     className="bg-gray-200"
                     id="name"
                     type="text"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your full name (optional)"
                     value={formData.name}
                     onChange={e => handleInputChange('name', e.target.value)}
                   />
