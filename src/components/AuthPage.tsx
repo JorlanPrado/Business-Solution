@@ -21,6 +21,70 @@ interface AuthPageProps {
   onNavigate: (page: Page) => void;
 }
 
+const RoutifyLogo = ({ className = "h-8 w-8" }) => {
+  return (
+    <svg 
+      className={className}
+      viewBox="0 0 100 100" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 1}} />
+          <stop offset="100%" style={{stopColor: '#1e40af', stopOpacity: 1}} />
+        </linearGradient>
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style={{stopColor: '#06b6d4', stopOpacity: 1}} />
+          <stop offset="100%" style={{stopColor: '#3b82f6', stopOpacity: 1}} />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <g transform="translate(25, 20)">
+        <line x1="25" y1="15" x2="25" y2="45" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        <line x1="25" y1="15" x2="45" y2="15" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        <line x1="45" y1="15" x2="45" y2="30" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        <line x1="45" y1="30" x2="25" y2="30" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        <line x1="25" y1="30" x2="45" y2="50" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        <line x1="25" y1="45" x2="25" y2="60" stroke="url(#accentGradient)" strokeWidth="4" opacity="0.6"/>
+        
+        <path 
+          d="M 10 10 L 25 5 L 40 10 L 40 28 C 40 38, 35 47, 25 52 C 15 47, 10 38, 10 28 Z" 
+          fill="none" 
+          stroke="url(#primaryGradient)" 
+          strokeWidth="3"
+          opacity="0.4"
+        />
+        
+        <circle cx="25" cy="15" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="25" cy="30" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="25" cy="45" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="25" cy="60" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="45" cy="15" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="45" cy="30" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        <circle cx="45" cy="50" r="7" fill="url(#primaryGradient)" filter="url(#glow)"/>
+        
+        <g transform="translate(25, 30)">
+          <rect x="-3" y="-1.5" width="6" height="5" fill="white" rx="0.5"/>
+          <path 
+            d="M -2 -1.5 L -2 -3 C -2 -4, -1 -5, 0 -5 C 1 -5, 2 -4, 2 -3 L 2 -1.5" 
+            fill="none" 
+            stroke="white" 
+            strokeWidth="1.5"
+          />
+          <circle cx="0" cy="1" r="1" fill="white" opacity="0.8"/>
+        </g>
+      </g>
+    </svg>
+  );
+};
+
 export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -142,7 +206,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
         {/* Logo */}
         <div className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Shield className="h-8 w-8 text-primary" />
+            <RoutifyLogo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-medium">Routify</span>
           </div>
           <p className="text-muted-foreground">{isLogin ? 'Welcome back' : 'Create your account'}</p>
