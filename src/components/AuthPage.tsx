@@ -143,7 +143,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
         <div className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Shield className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-medium">NetLearn</span>
+            <span className="text-2xl font-medium">Routify</span>
           </div>
           <p className="text-muted-foreground">{isLogin ? 'Welcome back' : 'Create your account'}</p>
         </div>
@@ -234,7 +234,7 @@ export function AuthPage({ onLogin, onNavigate }: AuthPageProps) {
                 <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    {isLogin ? 'New to NetLearn?' : 'Already have an account?'}
+                    {isLogin ? 'New to Routify?' : 'Already have an account?'}
                   </span>
                 </div>
               </div>
